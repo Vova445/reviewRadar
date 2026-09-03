@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readyDatabase } from "./d1";
 
-const ITERATIONS = 210_000;
+const ITERATIONS = 100_000;
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const encoder = new TextEncoder();
 
@@ -54,3 +54,4 @@ export async function authenticatedUser(request: Request) {
 export async function revokeSession(request: Request) {
   const token = readCookie(request, "rr_session"); if (!token) return; const db = await readyDatabase(); await db.prepare("DELETE FROM auth_sessions WHERE token_hash = ?").bind(await sha256(token)).run();
 }
+

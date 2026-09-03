@@ -1,5 +1,5 @@
 /* Collision-proof header */
-.rrHeader{height:auto!important;display:block!important;justify-content:initial!important;gap:0!important;padding:18px clamp(18px,3vw,48px)!important;border:0!important;background:transparent!important;position:fixed!important;inset:0 0 auto!important;z-index:100!important;pointer-events:none}.rrHeader .rrNav{pointer-events:auto;background:#f5f2e9e8!important;backdrop-filter:blur(24px) saturate(1.25);-webkit-backdrop-filter:blur(24px) saturate(1.25);box-shadow:0 16px 46px #25271f18,0 1px 0 #fff8}
+.rrHeader{height:auto!important;display:block!important;justify-content:initial!important;gap:0!important;padding:18px clamp(18px,3vw,48px)!important;border:0!important;background:transparent!important;position:fixed!important;inset:0 0 auto!important;z-index:100!important;pointer-events:none}.rrHeader .rrNav{pointer-events:auto;color:var(--ink)!important;background:#f5f2e9e8!important;backdrop-filter:blur(24px) saturate(1.25);-webkit-backdrop-filter:blur(24px) saturate(1.25);box-shadow:0 16px 46px #25271f18,0 1px 0 #fff8}
 .rrNav{display:grid;grid-template-columns:minmax(190px,1fr) auto minmax(290px,1fr);gap:24px}.rrNavLinks{position:static;transform:none;justify-self:center}.rrNavActions{justify-self:end}.rrLogo{min-width:max-content}.rrNavCta{flex-shrink:0}
 
 /* Compact footer */
@@ -28,3 +28,12 @@
 .rrNavActions .rrNavCta>i:after{content:"";position:absolute;left:10px;top:17px;width:14px;height:2px;border-radius:2px;background:currentColor;transform:rotate(-45deg);transform-origin:center}
 
 @media(max-width:820px){.rrNavActions{display:flex!important}.rrNavActions .rrNavCta{display:grid!important}.rrNavActions .rrSignOut{display:none}}
+
+/* Header CTA interaction and icon */
+.rrNavActions .rrNavCta{transition:transform .22s ease,background-color .22s ease,box-shadow .22s ease}
+.rrNavActions .rrNavCta>i{font:700 20px/1 Arial,sans-serif!important;transition:transform .22s ease,background-color .22s ease}
+.rrNavActions .rrNavCta>i:before,.rrNavActions .rrNavCta>i:after{display:none!important}
+.rrNavActions .rrNavCta:hover{transform:translateY(-2px);background:#292c27;box-shadow:0 14px 28px #17191630}
+.rrNavActions .rrNavCta:hover>i{transform:translate(2px,-2px)!important;background:#ff8065!important}
+.rrNavActions .rrNavCta:focus-visible{outline:3px solid #ff654466;outline-offset:3px}
+.rrNavActions .rrNavCta:active{transform:translateY(0)}
