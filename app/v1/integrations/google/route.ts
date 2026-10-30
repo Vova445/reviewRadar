@@ -1,0 +1,1 @@
+import { NextResponse } from "next/server";import { disconnect } from "../../../../server/google-business";export async function DELETE(r:Request){return await disconnect(r)?NextResponse.json({ok:true}):NextResponse.json({error:"unauthorized"},{status:401})}

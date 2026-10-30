@@ -27,5 +27,5 @@ if ((Test-Path -LiteralPath $viteCache) -and $viteCache.StartsWith($projectRoot,
   Remove-Item -LiteralPath $viteCache -Recurse -Force
 }
 
-& $nodeExecutable $vinextCli dev
+& $nodeExecutable $vinextCli dev --port 4000
 exit $LASTEXITCODE

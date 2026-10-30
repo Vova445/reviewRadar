@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { schemaMigrations, schemaStatements } from "../db/schema";
+import { googleSchemaStatements } from "./google-schema";
 
 type RuntimeEnv = Cloudflare.Env & { DB?: D1Database };
 let initialized: Promise<D1Database> | null = null;
@@ -13,7 +14,7 @@ export function database() {
 export function readyDatabase() {
   if (!initialized) initialized = (async () => {
     const db = database();
-    for (const statement of schemaStatements) await db.prepare(statement).run();
+    for (const statement of [...schemaStatements, ...googleSchemaStatements]) await db.prepare(statement).run();
     for (const migration of schemaMigrations) {
       const columns = await db.prepare(`PRAGMA table_info(${migration.table})`).all<{ name: string }>();
       if (!columns.results.some((column) => column.name === migration.column)) {
