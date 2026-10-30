@@ -38,7 +38,7 @@ Status legend: `[x]` verified in the repository, `[~]` present but incomplete or
 - [x] Fix all ESLint errors and warnings without blanket rule suppression; lint now enforces zero warnings.
 - [x] Preserve the original lint baseline in `audit/p0-02/lint-before.txt`.
 - [x] Verify clean install, lint, typecheck, test, build and HTTP 200 on Windows.
-- [ ] Verify the same locked build on Ubuntu through the OS-matrix quality workflow.
+- [x] Verify the same locked build on Ubuntu through the OS-matrix quality workflow.
 
 ### P0-01 — README and ADR-001
 
