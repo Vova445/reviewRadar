@@ -1,0 +1,49 @@
+===== docs\alerts-reports-score.md =====
+
+===== docs\google-business-profile.md =====
+15: 7. Enqueue an initial review import per selected location.
+21: The scheduled worker runs every 30 minutes as a reconciliation mechanism:
+23: `Scheduler → sync job → Google Business Profile → normalize → D1 → AI analysis`
+25: Each job uses an idempotent upsert on `(location_id, provider_review_id)`, stores a provider cursor where available, backs off on rate limits, and refreshes expired access tokens server-side. Google notifications should enqueue high-priority jobs for new-review events; the scheduler remains the fallback for missed or delayed notifications.
+27: Normalized reviews retain rating, comment, author display name, review time, provider ID, existing business reply, and a raw-content hash. AI analysis starts only after the database transaction succeeds.
+
+===== docs\insight-clustering-and-replies.md =====
+
+===== docs\operations-security.md =====
+5: Google flow: OAuth → integration → account discovery → location discovery → explicit selection → queued initial sync → scheduled reconciliation. Multi-location jobs use batch review retrieval where supported. Notifications follow `verified webhook → deduplicated event → queue → fetch worker → database → AI worker → alert worker`.
+
+===== docs\plans-and-usage.md =====
+3: Feature access is enforced server-side from the workspace subscription, never only through locked UI. The Free plan permits one location, the last 30 days, 50 imported reviews, and basic sentiment. AI Insights, Telegram, Reports, and historical analytics require a paid entitlement.
+
+===== docs\product-roadmap.md =====
+8: - Version 1.0: additional providers only after their commercial terms, data rights, retention policies, and useful review coverage are verified. A provider endpoint returning only excerpts is not treated as equivalent to full review access.
+12: The target repository structure separates marketing/auth/dashboard routes, domain components, provider libraries, services/repositories/jobs, Prisma schema, and independently deployable workers. The current prototype keeps the working Vinext/Sites UI while production backend contracts and PostgreSQL migrations evolve separately.
+
+===== docs\production-architecture.md =====
+1: # ReviewRadar production architecture
+3: ## Runtime boundaries
+5: `Next.js UI → HTTPS API/BFF → PostgreSQL + Redis-compatible queue → workers`
+7: The browser never calls the AI provider, Google Business Profile, PostgreSQL, or Redis directly. Next.js Route Handlers authenticate the user, resolve workspace membership, validate request input, and call the backend API. The API owns authorization and transactions. Workers own Google synchronization, AI analysis, anomaly detection, alerts, reports, and retention cleanup.
+9: For the Sites-hosted frontend, PostgreSQL and Redis must stay behind the external HTTPS API because the hosting runtime does not support raw TCP database connections. The former D1 binding is disabled. `db/schema.ts` is retained only as prototype history; `db/postgres/001_initial.sql` is the production schema source.
+11: ## Queue pipeline
+14: 2. API enqueues `review.analyze` with review/workspace/location IDs and an idempotency key.
+15: 3. AI worker loads temporary review content server-side.
+21: Dead-letter queues retain identifiers and sanitized errors, not full Google review content. Every consumer is idempotent and retry-safe.
+25: PostgreSQL performs deterministic aggregation over structured `review_topics`. It computes counts and growth between equal windows. Only anomalous clusters above configured support/confidence thresholds are sent to AI for a short explanation and recommended actions. The model is never asked to repeatedly analyze the entire review history.
+29: OAuth tokens are envelope-encrypted before persistence; ciphertext and encryption key ID are stored, never plaintext refresh tokens. Data keys and provider secrets live in a managed secrets/KMS system. Logs must redact authorization headers, tokens, review text, AI prompts, and database URLs.
+
+===== docs\provider-access-matrix.md =====
+9: | Tripadvisor | Content API key | Not treated as an owner inbox | No | Paid API account, key restrictions, and required attribution |
+13: ## Runtime rule
+17: ## Backend contract
+21: - `GET /v1/app` — authenticated workspace and dashboard aggregates from PostgreSQL;
+23: - provider callbacks, encrypted credential storage, queue-backed synchronization, retention cleanup, and audit logs.
+
+===== docs\review-analysis-and-retention.md =====
+1: # Review analysis and Google Content retention
+5: The database separates provider metadata, temporary source content, and ReviewRadar-derived analysis.
+7: - `reviews`: workspace/location ownership, source identifiers, rating, provider timestamps, fetch time, and retention deadline.
+8: - `review_source_content`: temporary Google-sourced author, comment, reply, language, and content hash. `purge_after` is set from the policy-aware retention configuration and never later than the currently permitted window.
+13: The production implementation must re-check the current Google Business Profile policies and contractual terms before launch. A scheduled retention job deletes expired `review_source_content`; refresh-on-demand must not silently extend retention beyond what the current policy permits. Deletion must also cover logs, queues, debug payloads, exports, backups, and AI-provider request retention.
+21: System topics provide stable reporting dimensions for a business vertical. AI-discovered topics are created only after normalization, confidence checks, and similarity matching to avoid duplicates such as `wait time`, `waiting`, and `long queue`. A human can later merge or promote discovered topics without rewriting historical reviews.
+

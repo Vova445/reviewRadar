@@ -28,6 +28,15 @@ Status legend: `[x]` verified in the repository, `[~]` present but incomplete or
 
 ## P0 — make the existing MVP safe and deployable
 
+### P0-04 — dependencies and secrets
+
+- [x] Record a dated production dependency audit and remediate all findings.
+- [x] Configure weekly npm and GitHub Actions Dependabot updates.
+- [x] Scan the complete Git history with Gitleaks locally and in CI.
+- [x] Enable GitHub secret scanning and push protection.
+- [x] Reduce `.env.example` to supported integrations and add `APP_BASE_URL` and `SESSION_SECRET`.
+- [x] Keep `.env.local` ignored through the `.env*` rule while retaining `.env.example`.
+
 ### P0-03 — CI and protected main branch
 
 - [x] Run CI for pull requests and pushes to `main`.
