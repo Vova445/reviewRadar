@@ -9,4 +9,8 @@ ReviewRadar must answer only three questions: **What is happening? Why is it hap
 
 The acquisition wedge is **Reputation Autopsy**: connect Google, identify the top three issues hurting the business, quantify volume and change, estimate impact, and recommend the next action. The highest external dependency risk remains Google Business Profile API approval and ongoing policy compliance—not the application framework or model provider.
 
-The target repository structure separates marketing/auth/dashboard routes, domain components, provider libraries, services/repositories/jobs, Prisma schema, and independently deployable workers. The current prototype keeps the working Vinext/Sites UI while production backend contracts and PostgreSQL migrations evolve separately.
+Through beta, the product uses the Vinext/Sites Cloudflare Worker with D1 as the authoritative datastore, as defined by ADR-001. The next architecture work is to move long-running synchronization, analysis, alerts, reports, and retention into Cloudflare-native durable jobs while preserving one Worker-facing API boundary.
+
+## Future
+
+Alternative databases or separately deployed services are considered only after beta and only when measured ADR-001 review triggers justify their migration cost.

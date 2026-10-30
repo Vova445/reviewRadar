@@ -12,14 +12,18 @@ This document is intentionally conservative: the product must not label a source
 
 ## Runtime rule
 
-Provider credentials stay on the server. The browser calls ReviewRadar's `/api/integrations/:provider/connect` route, which forwards to the production API. Missing credentials produce a disabled UI state; they never produce sample reviews or a fake `Connected` status.
+Provider credentials stay in the Cloudflare Worker. The browser calls ReviewRadar's `/api/integrations/:provider/connect` route; implemented providers are handled by server-side route code and stored through the D1 `DB` binding. Missing credentials produce a disabled UI state; they never produce sample reviews or a fake `Connected` status.
 
-## Backend contract
+## Worker contract
 
-The external API configured by `REVIEWRADAR_API_BASE_URL` must expose:
+The Cloudflare Worker exposes authenticated application and integration routes:
 
-- `GET /v1/app` — authenticated workspace and dashboard aggregates from PostgreSQL;
+- `GET /api/app` — authenticated workspace and dashboard aggregates from D1;
 - `POST /v1/integrations/:provider/connect` — returns `{ "url": "https://..." }` for an authorization/onboarding flow;
-- provider callbacks, encrypted credential storage, queue-backed synchronization, retention cleanup, and audit logs.
+- provider callbacks, encrypted credential storage, synchronization, retention cleanup, and audit logs.
 
 Every endpoint must derive `workspace_id` from the authenticated session, never from an untrusted browser field.
+
+## Future
+
+Provider-specific external services may be evaluated after beta if ADR-001 review triggers are met. They are not required by the current Worker + D1 runtime.

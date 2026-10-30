@@ -1,15 +1,18 @@
 {
-  "name": "sites-project",
+  "name": "reviewradar",
   "version": "0.1.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "dev": "vinext dev --port 4000",
+    "dev:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "build": "vinext build",
     "start": "vinext start",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "next": "16.2.6",
@@ -20,7 +23,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
-    "@openai/sites-vite-plugin": "^0.1.0 || ^0.2.0",
+    "@openai/sites-vite-plugin": "0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
@@ -34,7 +37,11 @@
     "typescript": "5.9.3",
     "vinext": "1.0.0-beta.3",
     "vite": "8.0.13",
+    "vitest": "4.0.4",
     "wrangler": "4.92.0"
   },
-  "type": "module"
+  "type": "module",
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "1.0.1"
+  }
 }

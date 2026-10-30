@@ -1,4 +1,5 @@
 import LandingHeader from "../landing/landing-header";
+import Link from "next/link";
 import "../landing/landing.css";
 import "../landing/header-footer.css";
 import "../landing/header-footer-fix.css";
@@ -87,9 +88,9 @@ export default function TermsPage() {
         </div>
 
         <div style={{ marginTop: "60px", paddingTop: "30px", borderTop: "1px solid #2a2d28" }}>
-          <a href="/" style={{ color: "var(--orange)", textDecoration: "none", fontWeight: 700 }}>
+          <Link href="/" style={{ color: "var(--orange)", textDecoration: "none", fontWeight: 700 }}>
             ← Повернутися на головну
-          </a>
+          </Link>
         </div>
       </section>
     </main>

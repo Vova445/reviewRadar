@@ -7,7 +7,7 @@ type AnalyticsReview={rating:number;review_created_at:number;sentiment:string|nu
 type TopicMention={name:string;sentiment:string;review_created_at:number};
 
 export default function AnalyticsPanel({reviews,topicMentions}:{reviews:AnalyticsReview[];topicMentions:TopicMention[]}){
- const{language}=useLanguage();const en=language==="en";const[period,setPeriod]=useState("180");const cutoff=period==="all"?0:Date.now()-Number(period)*86400000;
+ const{language}=useLanguage();const en=language==="en";const[period,setPeriod]=useState("180");const[mountedAt]=useState(()=>Date.now());const cutoff=period==="all"?0:mountedAt-Number(period)*86400000;
  const scoped=useMemo(()=>reviews.filter(review=>review.review_created_at>=cutoff),[reviews,cutoff]);const scopedTopics=useMemo(()=>topicMentions.filter(topic=>topic.review_created_at>=cutoff),[topicMentions,cutoff]);
  const months=useMemo(()=>{const map=new Map<string,{date:Date;count:number;sum:number}>();for(const review of scoped){const date=new Date(review.review_created_at);const key=`${date.getFullYear()}-${date.getMonth()}`;const item=map.get(key)??{date:new Date(date.getFullYear(),date.getMonth(),1),count:0,sum:0};item.count++;item.sum+=review.rating;map.set(key,item)}return [...map.values()].sort((a,b)=>a.date.getTime()-b.date.getTime()).slice(-6)},[scoped]);
  const sentiment=useMemo(()=>({positive:scoped.filter(r=>r.sentiment==="positive").length,neutral:scoped.filter(r=>r.sentiment==="neutral").length,negative:scoped.filter(r=>r.sentiment==="negative").length}),[scoped]);
