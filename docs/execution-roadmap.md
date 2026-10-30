@@ -35,7 +35,7 @@ Status legend: `[x]` verified in the repository, `[~]` present but incomplete or
 - [x] Run locked install, lint, typecheck, tests and build on Ubuntu and Windows.
 - [x] Cancel superseded workflow runs with a concurrency group.
 - [x] Add a pull-request template covering tests, migrations, documentation and accessibility.
-- [ ] Require pull requests and successful CI checks through the GitHub `main` branch protection rule.
+- [x] Require pull requests and successful CI checks through the GitHub `main` branch protection rule.
 
 ### P0-02 — reproducible build and green static gates
 
