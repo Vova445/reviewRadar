@@ -28,6 +28,15 @@ Status legend: `[x]` verified in the repository, `[~]` present but incomplete or
 
 ## P0 — make the existing MVP safe and deployable
 
+### P0-03 — CI and protected main branch
+
+- [x] Run CI for pull requests and pushes to `main`.
+- [x] Read the Node version from `.nvmrc` and cache npm dependencies.
+- [x] Run locked install, lint, typecheck, tests and build on Ubuntu and Windows.
+- [x] Cancel superseded workflow runs with a concurrency group.
+- [x] Add a pull-request template covering tests, migrations, documentation and accessibility.
+- [ ] Require pull requests and successful CI checks through the GitHub `main` branch protection rule.
+
 ### P0-02 — reproducible build and green static gates
 
 - [x] Rename the npm package to `reviewradar`.
