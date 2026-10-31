@@ -4,13 +4,13 @@
 
 The database separates provider metadata, temporary source content, and ReviewRadar-derived analysis.
 
-- `reviews`: workspace/location ownership, source identifiers, rating, provider timestamps, fetch time, and retention deadline.
-- `review_source_content`: temporary Google-sourced author, comment, reply, language, and content hash. `purge_after` is set from the policy-aware retention configuration and never later than the currently permitted window.
+- `reviews`: workspace/location ownership, source identifiers, rating, provider timestamps, fetch time, and a `retention_until` deadline set once at first import (30 days).
+- `review_source_content`: temporary Google-sourced author, comment, reply, language, and content hash. Its purge deadline is the same first-import deadline and a repeated sync never moves it.
 - `review_analyses`: sentiment, score, emotion, urgency, summary, model version, and analysis timestamp.
 - `topics`: both `system` and `ai_discovered` topics. There is no global fixed topic enum.
 - `review_topics`: per-review topic sentiment and confidence.
 
-The production implementation must re-check the current Google Business Profile policies and contractual terms before launch. A scheduled retention job deletes expired `review_source_content`; refresh-on-demand must not silently extend retention beyond what the current policy permits. Deletion must also cover logs, queues, debug payloads, exports, backups, and AI-provider request retention.
+The daily 03:00 UTC Worker Cron deletes expired `reviews`; foreign-key cascades remove source content, analyses, and review-topic links. It logs only the deleted row count. Disconnecting Google immediately removes imported Google reviews and cancels active sync jobs for Google locations. Repeated sync may refresh review fields only while the original retention window is still active. The production implementation must re-check current Google Business Profile policies and contractual terms before launch. Deletion must also cover logs, queues, debug payloads, exports, backups, and AI-provider request retention.
 
 ## AI pipeline
 
