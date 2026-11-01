@@ -10,6 +10,7 @@
     "dev:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "build": "vinext build",
     "start": "vinext start",
+    "rotate:oauth-keys": "node scripts/rotate-oauth-token-keys.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
