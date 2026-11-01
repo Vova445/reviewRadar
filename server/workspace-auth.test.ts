@@ -34,6 +34,6 @@ describe("workspace isolation A → B", () => {
   it("uses one canonical uppercase role enum and enforces minimum roles", async () => {
     const db = databaseFixture();
     expect((await requireWorkspaceMember("user-a", "workspace-a", WorkspaceRole.OWNER, db))?.role).toBe(WorkspaceRole.OWNER);
-    expect(await requireWorkspaceMember("user-a", "workspace-a", WorkspaceRole.ADMIN, db)).toBeNull();
+    expect((await requireWorkspaceMember("user-a", "workspace-a", WorkspaceRole.ADMIN, db))?.role).toBe(WorkspaceRole.OWNER);
   });
 });

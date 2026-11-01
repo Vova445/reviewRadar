@@ -1,5 +1,3 @@
-import { readyDatabase } from "./d1";
-
 export type AuditEventType = "login" | "logout" | "connect" | "disconnect" | "delete" | "role_change";
 const sensitiveKey = /(?:token|password|passphrase|email|comment|^review$|reviewtext|reviewbody|requestbody|body|content|cookie|authorization|secret|(?:oauth|auth|callback)?code)/i;
 const emailPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
@@ -55,7 +53,7 @@ export async function writeAuditEvent(input: {
   meta?: Record<string, unknown>;
   request?: Request;
 }, database?: D1Database) {
-  const db = database ?? await readyDatabase();
+  const db = database ?? await (await import("./d1")).readyDatabase();
   const id = crypto.randomUUID();
   const createdAt = Date.now();
   const meta = safeAuditMeta(input.meta);

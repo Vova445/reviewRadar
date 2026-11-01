@@ -13,11 +13,20 @@ function fakeD1() {
       return {
         bind(...args: unknown[]) {
           return {
+            sql,
+            args,
             async first() {
               if (sql.startsWith("SELECT id FROM sync_jobs")) {
                 return state.job.status === "queued" && state.job.locked_until <= Number(args[1]) ? { id: state.job.id } : null;
               }
               return null;
+            },
+            async all() {
+              if (sql.startsWith("SELECT workspace_id,COUNT(*)")) {
+                const count = [...state.retention.values()].filter((deadline) => deadline <= Number(args[0])).length;
+                return { results: count ? [{ workspace_id: "workspace-a", count }] : [] };
+              }
+              return { results: [] };
             },
             async run() {
               if (sql.startsWith("DELETE FROM reviews")) {

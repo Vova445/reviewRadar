@@ -26,6 +26,6 @@ describe("dashboard metric scopes and denominators",()=>{
   it("uses each location's local calendar boundary across UTC offsets",()=>{
     const now=ts("2026-03-10T12:00:00Z"),nyBoundary=ts("2026-02-09T04:30:00Z");
     expect(isInLocalReviewWindow(nyBoundary,now,"America/New_York")).toBe(false);
-    expect(localReviewWindows(now,"Europe/Kyiv").currentStart).toBe(ts("2026-02-09T22:00:00Z"));
+    expect(localReviewWindows(now,"Europe/Kyiv").currentStart).toBe(ts("2026-02-08T22:00:00Z"));
   });
 });
