@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { authenticatedUser } from "../../../server/d1-auth";
 import { readyDatabase } from "../../../server/d1";
+import { requireWorkspaceMember, requestedWorkspaceId, WorkspaceRole } from "../../../server/workspace-auth";
 
 export const dynamic = "force-dynamic";
 
 async function context(request: Request) {
   const auth = await authenticatedUser(request);
   if (!auth) return null;
+  const member = await requireWorkspaceMember(auth.user.id, requestedWorkspaceId(request));
+  if (!member) return null;
   const db = await readyDatabase();
-  const workspace = await db.prepare("SELECT w.id, w.name, wm.role FROM workspaces w JOIN workspace_members wm ON wm.workspace_id = w.id WHERE wm.user_id = ? LIMIT 1").bind(auth.user.id).first<{id:string;name:string;role:string}>();
+  const workspace = await db.prepare("SELECT w.id, w.name, wm.role FROM workspaces w JOIN workspace_members wm ON wm.workspace_id = w.id WHERE wm.user_id = ? AND w.id = ? LIMIT 1").bind(auth.user.id,member.workspaceId).first<{id:string;name:string;role:string}>();
   return workspace ? { auth, db, workspace } : null;
 }
 
@@ -33,7 +36,7 @@ export async function PATCH(request: Request) {
   const allowedTimezones = ["Europe/Kyiv", "Europe/Warsaw", "Europe/London", "America/New_York", "America/Los_Angeles"];
   const timezone = typeof body?.timezone === "string" && allowedTimezones.includes(body.timezone) ? body.timezone : null;
   if (name.length < 2 || name.length > 80 || workspaceName.length < 2 || workspaceName.length > 100 || !locale || !timezone) return NextResponse.json({ error: "invalid_input" }, { status: 400 });
-  if (value.workspace.role !== "owner") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (value.workspace.role.trim().toUpperCase() !== WorkspaceRole.OWNER) return NextResponse.json({ error: "workspace_not_found" }, { status: 404 });
   const now = Date.now();
   await value.db.batch([
     value.db.prepare("UPDATE users SET name = ? WHERE id = ?").bind(name, value.auth.user.id),

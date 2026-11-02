@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           Політика конфіденційності
         </h1>
         <p style={{ color: "#a0a49c", fontSize: "16px", lineHeight: "1.6", marginBottom: "48px" }}>
-          Останнє оновлення: 2 вересня 2026 року.<br />
+          Версія 1.1 · чинна з 30 жовтня 2026 року.<br />
           Офіційне товариство: <strong>AVEiron LIMITED LIABILITY COMPANY</strong> (ТОВ &quot;AVEiron&quot;).
         </p>
 
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
               Ця Політика конфіденційності описує, як компанія <strong>AVEiron LIMITED LIABILITY COMPANY</strong> (&quot;ми&quot;, &quot;наш&quot; або &quot;ReviewRadar&quot;) збирає, використовує, зберігає та захищає персональні дані та інформацію користувачів під час використання платформи <strong>ReviewRadar</strong> (`https://reviewradar.reviewradar-vova445.workers.dev`).
             </p>
             <p style={{ marginTop: "12px" }}>
-              Ми поважаємо ваші права на приватність і прагнемо забезпечити максимальний захист усіх даних у відповідності до Загального регламенту про захист даних (GDPR) та стандартів Google OAuth User Data Policy.
+              Ця політика описує поточну обробку даних. Ми застосовуємо вимоги законодавства про приватність, зокрема GDPR там, де він застосовується, та правила Google OAuth User Data Policy.
             </p>
           </article>
 
@@ -41,33 +41,31 @@ export default function PrivacyPage() {
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>2. Інформація, яку ми збираємо</h2>
             <p>Під час роботи з платформою ReviewRadar ми можемо збирати наступні категорії даних:</p>
             <ul style={{ paddingLeft: "20px", marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              <li><strong>Облікові дані акаунта:</strong> електронна пошта, ім&apos;я користувача, пароль у зашифрованому вигляді.</li>
-              <li><strong>OAuth Токени доступу:</strong> авторизаційні токени Google Business Profile, Booking.com, Tripadvisor, Yelp та Facebook для синхронізації відгуків вашого бізнесу.</li>
+              <li><strong>Облікові дані акаунта:</strong> електронна пошта, ім&apos;я користувача та пароль у формі криптографічного хешу.</li>
+              <li><strong>OAuth-токени:</strong> токени Google Business Profile, якщо ви підключили цю інтеграцію. Booking.com, Tripadvisor, Yelp та Facebook поки не доступні.</li>
               <li><strong>Публічні відгуки бізнесу:</strong> текстуальний зміст відгуків, оцінки (рейтинг), дати публікації та назви локацій.</li>
-              <li><strong>Технічні дані:</strong> IP-адреса, файли cookies для підтримки захищеної сесії (HttpOnly cookies), логи доступу.</li>
+              <li><strong>Технічні дані:</strong> HttpOnly cookie сесії та похідний ключ IP-адреси й email для обмеження спроб входу.</li>
             </ul>
           </article>
 
           <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>3. Використання даних Google OAuth (Google Limited Use Requirements)</h2>
             <p>
-              ReviewRadar підключається до сервісів Google (Google Business Profile API) виключно за вашою згодою для аналізу публічних відгуків ваших закладів.
+              ReviewRadar підключає Google Business Profile API за вашою згодою для синхронізації доступних відгуків локацій.
             </p>
             <ul style={{ paddingLeft: "20px", marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
               <li>Ми використовуємо токени Google виключно для отримання публічних відгуків вашого бізнесу.</li>
-              <li>Ми <strong>не передаємо</strong> і <strong>не продаємо</strong> ваші дані Google OAuth третім особам.</li>
-              <li>Ми не використовуємо дані Google для цілей таргетованої реклами або навчання загальних штучних інтелектів без вашої дозволу.</li>
+              <li>Ми не продаємо дані Google OAuth. Дані зберігаються в Cloudflare; Google обробляє OAuth-запити та надає дані профілю за вашою згодою.</li>
+              <li>Поточна версія не надсилає відгуки до зовнішніх AI-провайдерів: AI-аналіз ще не ввімкнений.</li>
               <li>Всі OAuth-токени зберігаються в зашифрованому вигляді на серверному рівні й ніколи не передаються в браузер.</li>
             </ul>
           </article>
 
           <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>4. Мета обробки даних</h2>
-            <p>Збирані дані використовуються виключно для забезпечення функціональності платформи ReviewRadar:</p>
+            <p>Зараз дані використовуються для авторизації Google Business Profile, синхронізації відгуків і показу рейтингу та базових аналітичних метрик у workspace.</p>
             <ul style={{ paddingLeft: "20px", marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              <li>Кластеризація та аналіз тональності відгуків за допомогою алгоритмів AI.</li>
-              <li>Виявлення операційних проблем та аномалій у репутації вашого бізнесу.</li>
-              <li>Формування аналітичних звітів та сповіщень для вашої команди.</li>
+              <li>AI-кластеризація, інсайти, доставка сповіщень і тижневі звіти наразі не ввімкнені.</li>
             </ul>
           </article>
 
@@ -75,22 +73,33 @@ export default function PrivacyPage() {
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>5. Захист та зберігання даних</h2>
             <p>
               Безпека закладена в архітектуру ReviewRadar. Усі дані передаються через захищене шифроване з&apos;єднання HTTPS/TLS.
-              Кожен запит проходить перевірку ізоляції workspace, токени зберігаються з використанням шифрування AES-256.
+              Захищені API-маршрути перевіряють сесію користувача та його доступ до workspace. OAuth-токени шифруються AES-256-GCM перед збереженням.
+            </p>
+            <p style={{ marginTop: "12px" }}>
+              Імпортований відгук Google, його текст, ім&apos;я автора, відповідь компанії та похідні записи зберігаються до 30 днів від першого імпорту. Повторна синхронізація не продовжує строк. Прострочені записи видаляються щоденним завданням; після відключення Google відгуки та пов&apos;язаний вміст видаляються під час обробки відключення. Дані акаунта зберігаються, поки він активний; для запиту щодо акаунта зверніться за адресою нижче.
             </p>
           </article>
 
           <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
-            <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>6. Права користувачів</h2>
+            <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>6. Постачальники інфраструктури</h2>
+            <ul style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <li><strong>Cloudflare, Inc.</strong> — виконання Worker і зберігання даних у D1.</li>
+            </ul>
+            <p style={{ marginTop: "12px" }}><strong>Інтегрована платформа:</strong> Google LLC надає OAuth та Google Business Profile API, якщо ви підключили цей сервіс.</p>
+            <p style={{ marginTop: "12px" }}>Поточний код не інтегрує зовнішній AI-сервіс, сервіс email-розсилок або платформу доставки сповіщень.</p>
+          </article>
+
+          <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
+            <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>7. Права користувачів</h2>
             <p>Ви маєте право у будь-який момент:</p>
             <ul style={{ paddingLeft: "20px", marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              <li>Відкликати доступ до OAuth-акаунтів (Google, Booking, тощо).</li>
-              <li>Запитувати видалення всіх ваших персональних даних та інтеграцій з нашої бази даних.</li>
-              <li>Отримати експорт ваших даних у форматі JSON.</li>
+              <li>Відкликати доступ Google Business Profile у налаштуваннях інтеграції.</li>
+              <li>Подати запит на доступ, виправлення або видалення даних за контактною адресою. Самообслуговуваний експорт наразі недоступний.</li>
             </ul>
           </article>
 
           <article>
-            <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>7. Контактна інформація компанії</h2>
+            <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>8. Контактна інформація компанії</h2>
             <p>З усіх питань стосовно Політики конфіденційності та обробки даних звертайтеся за реквізитами:</p>
             <div style={{ marginTop: "16px", padding: "20px", borderRadius: "16px", background: "#1c1f1a", border: "1px solid #32362e" }}>
               <p><strong>Компанія:</strong> AVEiron LIMITED LIABILITY COMPANY (ТОВ &quot;AVEiron&quot;)</p>

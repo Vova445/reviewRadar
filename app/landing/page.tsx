@@ -8,14 +8,9 @@ import "./signal-wow.css";
 import "./sections-wow.css";
 import LandingHeader from "./landing-header";
 import { useLanguage } from "../components/language";
+import { featureFlags } from "../../shared/feature-flags";
 
-const sources = [
-  "Google Business Profile",
-  "Booking.com",
-  "Tripadvisor",
-  "Yelp",
-  "Facebook",
-];
+const sources = ["Google Business Profile"];
 const marquee = [...sources, ...sources, ...sources, ...sources];
 const landingEnglish = new Map<string, string>([
   ["Відгуки говорять.", "Reviews speak."],
@@ -272,10 +267,7 @@ export default function LandingPage() {
           <em>ReviewRadar</em> слухає.
         </h1>
         <div className="rrHeroFoot">
-          <p>
-            Збирайте реальний голос клієнтів в одному місці. Помічайте проблеми
-            раніше. Розумійте, що робити далі.
-          </p>
+          <p>{en ? "Connect Google Business Profile to import real reviews and see ratings and basic analytics. Advanced analysis is coming soon." : "Підключіть Google Business Profile, щоб імпортувати реальні відгуки й переглядати рейтинги та базову аналітику. Розширений аналіз — скоро."}</p>
           <div>
             <a href="/auth?mode=signup">
               Створити акаунт <b>↗</b>
@@ -300,7 +292,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <div className="rrTicker" aria-label="Supported review platforms">
+      <div className="rrTicker" aria-label="Currently available review platform">
         <div className="rrTickerTrack">
           {marquee.map((source, index) => (
             <span key={`${source}-${index}`}>
@@ -315,25 +307,23 @@ export default function LandingPage() {
         <div className="rrEyebrow">01 / ЧОМУ REVIEWRADAR</div>
         <div className="rrProblemGrid">
           <h2>
-            Не читайте сотні відгуків.
+            Переглядайте відгуки.
             <br />
-            <em>Побачте один сигнал.</em>
+            <em>{en ? "See the full picture." : "Бачте загальну картину."}</em>
           </h2>
           <div>
             <p>
-              Окремий відгук — це думка. Повторюваний патерн — це
-              бізнес-проблема.
+              {en ? "Each review captures one customer’s experience." : "Кожен відгук передає досвід окремого клієнта."}
             </p>
             <p>
-              ReviewRadar структурує потік зворотного зв’язку, щоб власник за
-              кілька секунд розумів: що змінилося, чому це важливо і де діяти.
+              {en ? "ReviewRadar brings imported reviews, ratings and basic trends into one workspace. Automated patterns and actions are coming soon." : "ReviewRadar збирає імпортовані відгуки, рейтинги й базові тенденції в одному workspace. Автоматичні патерни та рекомендації — скоро."}
             </p>
           </div>
         </div>
         <div className="rrSignalStage">
           <div className="rrSignalCanvas">
             <div className="rrCanvasHead">
-              <span>LIVE CLUSTERING PREVIEW</span>
+              <span>{en ? "ILLUSTRATIVE PREVIEW · AI COMING SOON" : "ІЛЮСТРАТИВНИЙ ПРИКЛАД · AI СКОРО"}</span>
               <b>
                 <i />
                 SIGNAL FOUND
@@ -425,6 +415,7 @@ export default function LandingPage() {
               <FeatureIcon name="cluster" />
             </div>
             <small>TOPIC CLUSTERS</small>
+            {!featureFlags.aiAnalysis && <small className="featureSoon">{en ? "COMING SOON" : "СКОРО"}</small>}
             <h3>AI об’єднує різні формулювання в одну зрозумілу тему.</h3>
             <div className="rrCluster">
               <span>“довго чекали”</span>
@@ -438,6 +429,7 @@ export default function LandingPage() {
               <FeatureIcon name="trend" />
             </div>
             <small>ANOMALY RADAR</small>
+            {!featureFlags.anomalyDetection && <small className="featureSoon">{en ? "COMING SOON" : "СКОРО"}</small>}
             <h3>Помічає різкі зміни раніше, ніж вони стають рейтингом.</h3>
             <div className="rrWave">
               <i />
@@ -455,6 +447,7 @@ export default function LandingPage() {
               <FeatureIcon name="spark" />
             </div>
             <small>ACTION LAYER</small>
+            {!featureFlags.actionRecommendations && <small className="featureSoon">{en ? "COMING SOON" : "СКОРО"}</small>}
             <h3>Не просто “негатив”. Конкретний наступний крок для команди.</h3>
             <div className="rrActionLine">
               <i>01</i>
@@ -504,8 +497,8 @@ export default function LandingPage() {
             до рішення.
           </h2>
           <p>
-            Один надійний pipeline. Кожен крок залишає структурований,
-            перевірений результат.
+            Підключіть Google Business Profile і синхронізуйте відгуки. Розширений
+            аналіз позначено окремо, якщо він ще не ввімкнений.
           </p>
         </div>
         <div className="rrPipeline">
@@ -549,7 +542,7 @@ export default function LandingPage() {
                 <span>{n}</span>
               </div>
               <div>
-                <small>{tag}</small>
+                <small>{tag === "AI + ZOD" && !featureFlags.aiAnalysis ? (en ? "COMING SOON" : "СКОРО") : tag === "INSIGHT" && !featureFlags.insights ? (en ? "COMING SOON" : "СКОРО") : tag}</small>
                 <h3>{title}</h3>
                 <p>{text}</p>
               </div>
@@ -666,7 +659,7 @@ export default function LandingPage() {
             </p>
             <span className="rrSystem">
               <i />
-              SYSTEM READY
+              {en ? "GOOGLE SYNC AVAILABLE" : "СИНХРОНІЗАЦІЯ GOOGLE ДОСТУПНА"}
             </span>
             <div
               style={{
@@ -695,26 +688,7 @@ export default function LandingPage() {
           </div>
           <div>
             <small>СОЦМЕРЕЖІ</small>
-            <a href="https://t.me" target="_blank" rel="noopener noreferrer">
-              Telegram ↗
-            </a>
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              LinkedIn ↗
-            </a>
-            <a href="https://x.com" target="_blank" rel="noopener noreferrer">
-              X (Twitter) ↗
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Facebook ↗
-            </a>
+            <span>{en ? "Social profiles coming soon" : "Профілі в соцмережах — скоро"}</span>
             <a className="rrToTop" href="#top">
               На початок <i>↑</i>
             </a>

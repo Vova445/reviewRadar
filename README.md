@@ -64,6 +64,7 @@ Never commit `.env.local`, production secrets, OAuth tokens, or key material. `.
 
 | Name | Required | Purpose |
 |---|---:|---|
+| `APP_BASE_URL` | Production | Canonical origin, for example `https://reviewradar.reviewradar-vova445.workers.dev`. |
 | `AUTH_PASSWORD_PEPPER` | Production | Additional server-side input for password derivation. Use a long random secret. |
 
 ### Google Business Profile
@@ -73,8 +74,10 @@ Never commit `.env.local`, production secrets, OAuth tokens, or key material. `.
 | `GOOGLE_CLIENT_ID` | Google integration | OAuth client ID. |
 | `GOOGLE_CLIENT_SECRET` | Google integration | OAuth client secret. |
 | `GOOGLE_REDIRECT_URI` | Google integration | Exact OAuth callback URI. Local default: `http://localhost:4000/v1/integrations/google/callback`. |
-| `OAUTH_TOKEN_ENCRYPTION_KEY` | Google integration | Secret used to encrypt provider tokens at rest. |
-| `OAUTH_TOKEN_ENCRYPTION_KEY_ID` | Recommended | Identifier stored with encrypted tokens for future key rotation. |
+| `OAUTH_TOKEN_ENCRYPTION_KEYS` | Google integration | JSON map of key IDs to secrets; the selected active key encrypts new tokens and all listed keys decrypt stored tokens. |
+| `OAUTH_TOKEN_ENCRYPTION_KEY_ID` | Google integration | Active key ID. Stored beside each encrypted refresh/access token. |
+| `OAUTH_TOKEN_ENCRYPTION_KEY` | Legacy fallback | Single-key compatibility only; use the keyring variable for rotation. |
+| `OAUTH_TOKEN_ROTATION_SECRET` | Key rotation | Bearer secret for the protected, paginated token-rotation endpoint and CLI script. |
 | `GOOGLE_PUBSUB_VERIFICATION_TOKEN` | Notifications | Verification value for the current Google notification endpoint. |
 | `GOOGLE_SYNC_SECRET` | Scheduled/manual sync | Bearer secret for `/v1/jobs/google/sync`. |
 
@@ -155,6 +158,7 @@ Stop the previous ReviewRadar development process and rerun `npm run dev`. Chang
 - [Current architecture](docs/production-architecture.md)
 - [Execution roadmap](docs/execution-roadmap.md)
 - [Google integration notes](docs/google-business-profile.md)
+- [OAuth token key rotation procedure](docs/security/oauth-token-key-rotation.md)
 - [Security baseline](docs/operations-security.md)
 
 The repository is a working prototype, not yet a production-ready paid SaaS. Before external customer data is accepted, complete the P0 security, asynchronous-job, testing, observability, and retention work in the execution roadmap.

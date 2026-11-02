@@ -22,7 +22,7 @@ export default function TermsPage() {
           Умови використання (Terms of Service)
         </h1>
         <p style={{ color: "#a0a49c", fontSize: "16px", lineHeight: "1.6", marginBottom: "48px" }}>
-          Останнє оновлення: 2 вересня 2026 року.<br />
+          Версія 1.1 · чинна з 30 жовтня 2026 року.<br />
           Юридична особа: <strong>AVEiron LIMITED LIABILITY COMPANY</strong> (ТОВ &quot;AVEiron&quot;).
         </p>
 
@@ -40,10 +40,10 @@ export default function TermsPage() {
           <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>2. Опис послуг</h2>
             <p>
-              ReviewRadar надає аналітичну платформу репутаційного інтелекту (Reputation Intelligence), яка збирає та аналізує публічні відгуки клієнтів з різних джерел (Google Business Profile, Booking.com, Tripadvisor, Yelp, Facebook).
+              Поточна версія ReviewRadar підключає Google Business Profile за OAuth, синхронізує доступні відгуки та показує їх у workspace разом із рейтингом і базовою аналітикою. Це beta-сервіс.
             </p>
             <p style={{ marginTop: "12px" }}>
-              Сервіс здійснює кластеризацію відгуків за допомогою алгоритмів штучного інтелекту, визначає темп і зміни тональності, а також надає робочі інсайти для власників бізнесу.
+              Інтеграції Booking.com, Tripadvisor, Yelp і Facebook, AI-кластеризація, автоматичні інсайти, доставка сповіщень і тижневі звіти позначені «Скоро» та ще не є доступними функціями.
             </p>
           </article>
 
@@ -59,7 +59,7 @@ export default function TermsPage() {
           <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>4. Інтеграції зі сторонніми платформами</h2>
             <p>
-              ReviewRadar використовує офіційні API та авторизацію OAuth 2.0 для підключення сторонніх платформ. Ви підтверджуєте, що маєте належні права та повноваження для підключення бізнес-акаунтів відповідних локацій.
+              Наразі доступна лише інтеграція Google Business Profile. Ви підтверджуєте, що маєте належні права та повноваження для підключення бізнес-акаунтів і несете відповідальність за дотримання умов Google.
             </p>
           </article>
 
@@ -73,7 +73,7 @@ export default function TermsPage() {
           <article style={{ borderBottom: "1px solid #2a2d28", paddingBottom: "32px" }}>
             <h2 style={{ color: "#fff", font: "700 24px 'Manrope'", marginBottom: "16px" }}>6. Обмеження відповідальності</h2>
             <p>
-              Сервіс надається за принципом &quot;як є&quot; (&quot;as is&quot;). <strong>AVEiron LIMITED LIABILITY COMPANY</strong> не несе відповідальності за можливі збої в роботі сторонніх API (Google, Booking тощо) або тимчасову недоступність зовнішніх сервісів.
+              Сервіс надається за принципом &quot;як є&quot; (&quot;as is&quot;). <strong>AVEiron LIMITED LIABILITY COMPANY</strong> не несе відповідальності за можливі збої в роботі Google Business Profile API або тимчасову недоступність зовнішніх сервісів.
             </p>
           </article>
 
