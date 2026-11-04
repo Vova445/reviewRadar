@@ -5,6 +5,7 @@ import "./custom-select.css";
 import "./custom-select-fix.css";
 import "./analytics.css";
 import "./product-panels.css";
+import "./dashboard-a11y.css";
 import {LanguageToggle,useLanguage} from "../components/language";
 import SettingsPanel from "./settings-panel";
 import ReviewsPanel from "./reviews-panel";

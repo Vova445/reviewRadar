@@ -9,11 +9,14 @@
     "dev": "vinext dev --port 4000",
     "dev:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "build": "vinext build",
+    "preview": "wrangler dev --config dist/server/wrangler.json --port 4000 --var APP_BASE_URL:http://localhost:4000",
     "start": "vinext start",
     "rotate:oauth-keys": "node scripts/rotate-oauth-token-keys.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --max-warnings 0",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern coverage --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "next": "16.2.6",
@@ -22,17 +25,21 @@
     "zod": "4.1.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@openai/sites-vite-plugin": "0.2.0",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
+    "@vitest/coverage-v8": "^4.0.4",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
+    "miniflare": "^4.20260515.0",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",

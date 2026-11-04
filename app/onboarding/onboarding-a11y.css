@@ -1,0 +1,13 @@
+.obLogo span,.obIntro>small{color:#9c3e2c}
+.onboarding>header>span,.onboarding>footer{color:#5e615a}
+.obSteps>div:not(.active):not(.done){color:#575b53}
+.obSteps>div:not(.active):not(.done) b{color:#575b53}
+.obSteps .active b{background:#a33e2a}
+.obSteps>div.done{color:#2f7657}
+.connectGoogle small{color:#62655e}
+.obToolbar{color:#62655e}
+.obLocations small{color:#62655e}
+.obProgress>p{color:#62655e}
+.obIntro p,.obAccount small{color:#62655e}
+.obAccount span{color:#5e615a}
+.obPrimary{background:#a33e2a}

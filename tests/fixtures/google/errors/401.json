@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": 401,
+    "message": "The access token is invalid or expired.",
+    "status": "UNAUTHENTICATED"
+  }
+}

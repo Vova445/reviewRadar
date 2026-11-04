@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDashboardMetrics, isInLocalReviewWindow, localReviewWindows } from "./dashboard-metrics";
+import { calculateDashboardMetrics, isInLocalReviewWindow, localReviewWindows, resolveLocationTimezone } from "./dashboard-metrics";
 
 const ts=(value:string)=>Date.parse(value);
 const fixture=[
@@ -27,5 +27,14 @@ describe("dashboard metric scopes and denominators",()=>{
     const now=ts("2026-03-10T12:00:00Z"),nyBoundary=ts("2026-02-09T04:30:00Z");
     expect(isInLocalReviewWindow(nyBoundary,now,"America/New_York")).toBe(false);
     expect(localReviewWindows(now,"Europe/Kyiv").currentStart).toBe(ts("2026-02-08T22:00:00Z"));
+  });
+  it("resolves common location timezones and safely falls back",()=>{
+    expect(resolveLocationTimezone({ regionCode:"UA" })).toBe("Europe/Kyiv");
+    expect(resolveLocationTimezone({ regionCode:"US",locality:"Seattle" })).toBe("America/Los_Angeles");
+    expect(resolveLocationTimezone({ regionCode:"CA",locality:"Toronto" })).toBe("America/Toronto");
+    expect(resolveLocationTimezone({ regionCode:"XX" },"not/a-timezone")).toBe("UTC");
+  });
+  it("returns null averages and growth for an empty dataset",()=>{
+    expect(calculateDashboardMetrics([],ts("2026-03-10T12:00:00Z"))).toMatchObject({total:0,analyzed:0,averageRating:null,currentAverageRating:null,positivePercent:null,growthPercent:null});
   });
 });

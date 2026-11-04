@@ -1,0 +1,5 @@
+.gBrand small{color:#92978e}
+.gSteps i:not(.done):not(.active){color:#5f625b}
+.gHero small,.gStateCopy>small{color:#9c3e2c}
+.gHero h1 em{color:#a03d29}
+.gStateCopy p{color:#64675f}

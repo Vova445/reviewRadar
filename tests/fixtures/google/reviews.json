@@ -1,0 +1,14 @@
+{
+  "reviews": [
+    {
+      "reviewId": "review-001",
+      "reviewer": { "displayName": "Test Customer" },
+      "starRating": "FIVE",
+      "comment": "Excellent service and coffee.",
+      "createTime": "2026-10-30T12:00:00Z",
+      "updateTime": "2026-10-30T12:00:00Z"
+    }
+  ],
+  "averageRating": 5,
+  "totalReviewCount": 1
+}

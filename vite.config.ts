@@ -32,6 +32,10 @@ const localBindingConfig = {
         },
       ]
     : [],
+  queues: {
+    producers: [{ binding: 'ANALYSIS_QUEUE', queue: 'review-analysis' }],
+    consumers: [{ queue: 'review-analysis', max_retries: 4, dead_letter_queue: 'review-analysis-dlq', max_batch_size: 1 }],
+  },
   triggers: { crons: ['*/5 * * * *', '0 3 * * *'] },
 };
 

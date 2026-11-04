@@ -66,6 +66,8 @@ Never commit `.env.local`, production secrets, OAuth tokens, or key material. `.
 |---|---:|---|
 | `APP_BASE_URL` | Production | Canonical origin, for example `https://reviewradar.reviewradar-vova445.workers.dev`. |
 | `AUTH_PASSWORD_PEPPER` | Production | Additional server-side input for password derivation. Use a long random secret. |
+| `RESEND_API_KEY` | Account email | Resend transactional email API key. Free tier currently includes 3,000 emails/month and 100/day. |
+| `EMAIL_FROM` | Account email | Verified sender identity, for example `ReviewRadar <noreply@mail.example.com>`. Verify the sending domain with Resend and publish the exact SPF and DKIM DNS records it provides. |
 
 ### Google Business Profile
 
@@ -147,6 +149,10 @@ Compare `GOOGLE_REDIRECT_URI` with the Google Console value character by charact
 ### Google connect reports a missing variable
 
 Populate the required Google and encryption variables in `.env.local`, restart the server, and begin OAuth again. Never paste secret values into issues or logs.
+
+### Review AI analysis
+
+Set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` to enable queued review classification. The Worker expects Cloudflare Queues named `review-analysis` and `review-analysis-dlq`; its Wrangler config retries four times before routing failed messages to the DLQ. Configure a workspace cap in `workspace_ai_budgets.monthly_limit_micros` (USD in millionths; for example, `1000000` is $1 per UTC month). Usage, token counts, prompt version, model, and cached results are stored in D1.
 
 ### Port 4000 is already in use
 

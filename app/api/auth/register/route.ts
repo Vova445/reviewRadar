@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { authRateLimited, clearAuthFailures, hashPassword, newSession, recordAuthFailure, setSessionCookie } from "../../../../server/d1-auth";
 import { readyDatabase } from "../../../../server/d1";
 import { writeAuditEvent } from "../../../../server/logger";
+import { createAccountToken, sendAccountEmail } from "../../../../server/account-email";
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null) as { email?: string; password?: string; name?: string } | null;
+  const body = await request.json().catch(() => null) as { email?: string; password?: string; name?: string; locale?: string } | null;
   const email = body?.email?.trim().toLowerCase(); const name = body?.name?.trim(); const password = body?.password ?? "";
   if (!email || email.length>254 || !/^\S+@\S+\.\S+$/.test(email) || !name || name.length>80 || password.length < 8 || password.length>256) return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   const limit = await authRateLimited(request,email); if (limit.limited) return NextResponse.json({ error: "too_many_attempts" }, { status: 429 });
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
     db.prepare("INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, 'OWNER')").bind(workspaceId, userId),
   ]); } catch { return NextResponse.json({ error: "registration_failed" }, { status: 500 }); }
   await writeAuditEvent({ type: "role_change", workspaceId, userId, meta: { from: "none", to: "OWNER", reason: "workspace_created" }, request }, db);
+  try { const verificationToken = await createAccountToken(userId, "verify_email"); await sendAccountEmail(email, "verify_email", verificationToken, body?.locale ?? "en"); } catch { /* Registration remains available while email delivery is temporarily unavailable. */ }
   const token = await newSession(userId);
   await writeAuditEvent({ type: "login", workspaceId, userId, meta: { outcome: "success" }, request }, db);
   const response = NextResponse.json({ authenticated: true }); setSessionCookie(response, token); return response;

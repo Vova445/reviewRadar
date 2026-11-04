@@ -1,0 +1,10 @@
+.radarBrand small{color:#92978e}
+.radarWorkspace small{color:#a2a69f}
+.radarNav button:not(.active){color:#92978e}
+.radarContext{color:#62655d}
+.radarHero>div>small,.radarPageHead small{color:#9c3e2c}
+.radarHero h1 em{color:#a03d29}
+.coverageState.empty{color:#55594f}
+.radarMetricTop{color:#5e615a}
+.radarMetric.coral .radarMetricTop{color:#281a17}
+.radarPulse small,.radarPulse span{color:#5e615a}

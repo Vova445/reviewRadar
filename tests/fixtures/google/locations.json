@@ -1,0 +1,13 @@
+{
+  "locations": [
+    {
+      "name": "locations/987654321",
+      "title": "Northwind Cafe Kyiv",
+      "storefrontAddress": {
+        "regionCode": "UA",
+        "locality": "Kyiv",
+        "addressLines": ["1 Khreshchatyk Street"]
+      }
+    }
+  ]
+}
