@@ -41,7 +41,7 @@ jobs:
 
       - name: Scan complete Git history for secrets
         if: matrix.os == 'ubuntu-latest'
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
