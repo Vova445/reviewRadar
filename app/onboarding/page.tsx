@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LanguageToggle, useLanguage } from "../components/language";
 import "./onboarding.css";
 import "./onboarding-a11y.css";
@@ -31,6 +32,7 @@ const ui = {
 };
 
 export default function Onboarding() {
+  const router = useRouter();
   const { language } = useLanguage();
   const t = ui[language];
   const [data, setData] = useState<OnboardingData | null>(null);
@@ -43,7 +45,7 @@ export default function Onboarding() {
 
   const load = useCallback(async () => {
     const response = await fetch("/api/onboarding", { cache: "no-store" });
-    if (response.status === 401) { window.location.assign("/auth?next=%2Fonboarding"); return; }
+    if (response.status === 401) { router.replace("/auth?next=%2Fonboarding"); return; }
     if (!response.ok) throw new Error("state_failed");
     const next = await response.json() as OnboardingData;
     setData(next);
@@ -54,7 +56,7 @@ export default function Onboarding() {
       setStep(requested >= 1 && requested <= 4 ? requested : next.state.currentStep);
       window.history.replaceState({}, "", "/onboarding");
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
