@@ -27,7 +27,7 @@ jobs:
       AWS_EC2_METADATA_DISABLED: "true"
       DRILL_REPORT_PATH: d1-restore-drill-report.json
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
