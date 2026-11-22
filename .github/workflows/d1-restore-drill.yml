@@ -64,7 +64,7 @@ jobs:
         run: node scripts/rotate-d1-backups.mjs
       - name: Upload drill report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: d1-restore-drill-${{ github.run_id }}
           path: d1-restore-drill-report.json
