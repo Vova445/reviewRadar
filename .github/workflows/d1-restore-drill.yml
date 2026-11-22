@@ -1,0 +1,72 @@
+name: Monthly D1 restore drill
+
+on:
+  schedule:
+    - cron: "31 4 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-restore-drill
+  cancel-in-progress: false
+
+jobs:
+  restore-drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      R2_BACKUP_BUCKET: ${{ vars.R2_BACKUP_BUCKET }}
+      R2_ENDPOINT: https://${{ vars.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_EC2_METADATA_DISABLED: "true"
+      DRILL_REPORT_PATH: d1-restore-drill-report.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install AWS CLI for the R2 S3-compatible API
+        run: sudo apt-get update && sudo apt-get install --yes awscli
+      - name: Select and download the newest production backup
+        id: download
+        run: |
+          KEY=$(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 --bucket "$R2_BACKUP_BUCKET" --prefix d1/production/ --query "reverse(sort_by(Contents[?ends_with(Key, '.sql')], &LastModified))[0].Key" --output text)
+          test "$KEY" != "None"
+          echo "backup_key=${KEY}" >> "$GITHUB_OUTPUT"
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "s3://${R2_BACKUP_BUCKET}/${KEY}" /tmp/reviewradar-production.sql
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "s3://${R2_BACKUP_BUCKET}/${KEY%.sql}.counts.json" /tmp/reviewradar-production.counts.json
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "s3://${R2_BACKUP_BUCKET}/${KEY}.sha256" /tmp/reviewradar-production.sql.sha256
+          (cd /tmp && sha256sum --check reviewradar-production.sql.sha256)
+      - name: Restore into a disposable database in the staging account and compare every table count
+        env:
+          D1_BACKUP_KEY: ${{ steps.download.outputs.backup_key }}
+          D1_BACKUP_SQL_PATH: /tmp/reviewradar-production.sql
+          D1_BACKUP_COUNTS_PATH: /tmp/reviewradar-production.counts.json
+        run: node scripts/d1-restore-drill.mjs
+      - name: Publish drill record to R2
+        if: always()
+        run: |
+          if [ -f "$DRILL_REPORT_PATH" ]; then
+            DRILL_DATE=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+            aws --endpoint-url "$R2_ENDPOINT" s3 cp "$DRILL_REPORT_PATH" "s3://${R2_BACKUP_BUCKET}/d1/restore-drills/${DRILL_DATE}.json" --content-type application/json
+            cat "$DRILL_REPORT_PATH" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Retain only 30 days of production backups
+        if: always() && steps.download.outcome != 'skipped'
+        run: node scripts/rotate-d1-backups.mjs
+      - name: Upload drill report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d1-restore-drill-${{ github.run_id }}
+          path: d1-restore-drill-report.json
+          if-no-files-found: ignore
+          retention-days: 365

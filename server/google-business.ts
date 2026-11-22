@@ -4,6 +4,8 @@ import { minimizePII } from "./ai-review";
 import { requireWorkspaceMember, requestedWorkspaceId, WorkspaceRole } from "./workspace-auth";
 import { resolveLocationTimezone } from "./dashboard-metrics";
 import { logInfo, writeAuditEvent } from "./logger";
+import { logError } from "./logger";
+import * as Sentry from "@sentry/cloudflare";
 import { decryptProviderToken, encryptProviderToken } from "./token-encryption";
 const E=new TextEncoder(),SCOPE="https://www.googleapis.com/auth/business.manage";
 export const REVIEW_RETENTION_MS=30*24*60*60*1000;
@@ -81,10 +83,11 @@ export async function claimNextSyncJob(db:D1Database,now=Date.now()){
 export async function processNextSyncJob(database?:D1Database){
   const db=database??await readyDatabase(),claim=await claimNextSyncJob(db);
   if(!claim)return {processed:false};
+  const syncStartedAt=Date.now();
   const leaseUntil=claim.leaseUntil;
   const job=await db.prepare("SELECT j.id,j.workspace_id,j.location_id,j.cursor,j.attempts,c.id connection_id,c.encrypted_refresh_token,c.encrypted_refresh_token_key_id,c.encrypted_access_token,c.encrypted_access_token_key_id,c.scopes,c.access_expires_at,c.status connection_status,g.location_name FROM sync_jobs j JOIN locations l ON l.id=j.location_id AND l.workspace_id=j.workspace_id JOIN google_connections c ON c.workspace_id=j.workspace_id JOIN google_available_locations g ON g.connection_id=c.id AND g.location_name=l.provider_location_id WHERE j.id=?").bind(claim.id).first<{id:string;workspace_id:string;location_id:string;cursor:string|null;attempts:number;connection_id:string;encrypted_refresh_token:string;encrypted_refresh_token_key_id:string|null;encrypted_access_token:string|null;encrypted_access_token_key_id:string|null;scopes:string;access_expires_at:number|null;connection_status:string;location_name:string}>();
-  if(!job){await db.prepare("UPDATE sync_jobs SET status='failed',last_error='sync_source_missing',error='sync_source_missing',finished_at=?,locked_until=NULL WHERE id=? AND locked_until=?").bind(Date.now(),claim.id,leaseUntil).run();return {processed:true,status:"failed"}}
-  if(job.connection_status==="revoked") {await db.prepare("UPDATE sync_jobs SET status='revoked',finished_at=?,locked_until=NULL,last_error='integration_revoked' WHERE id=? AND locked_until=?").bind(Date.now(),job.id,leaseUntil).run();return {processed:true,status:"revoked"}}
+  if(!job){await db.prepare("UPDATE sync_jobs SET status='failed',last_error='sync_source_missing',error='sync_source_missing',finished_at=?,locked_until=NULL WHERE id=? AND locked_until=?").bind(Date.now(),claim.id,leaseUntil).run();Sentry.metrics.count("sync.job.error",1);Sentry.metrics.distribution("sync.job.duration",Date.now()-syncStartedAt,{unit:"millisecond"});logError("google_sync_source_missing");return {processed:true,status:"failed"}}
+  if(job.connection_status==="revoked") {await db.prepare("UPDATE sync_jobs SET status='revoked',finished_at=?,locked_until=NULL,last_error='integration_revoked' WHERE id=? AND locked_until=?").bind(Date.now(),job.id,leaseUntil).run();Sentry.metrics.count("sync.job.error",1);Sentry.metrics.distribution("sync.job.duration",Date.now()-syncStartedAt,{unit:"millisecond"});logError("google_sync_revoked");return {processed:true,status:"revoked"}}
   const conn:Conn={id:job.connection_id,workspace_id:job.workspace_id,encrypted_refresh_token:job.encrypted_refresh_token,encrypted_refresh_token_key_id:job.encrypted_refresh_token_key_id,encrypted_access_token:job.encrypted_access_token,encrypted_access_token_key_id:job.encrypted_access_token_key_id,scopes:job.scopes,access_expires_at:job.access_expires_at};
   try{
     const token=await access(db,conn),query=new URLSearchParams({pageSize:"50",orderBy:"updateTime desc"});if(job.cursor)query.set("pageToken",job.cursor);
@@ -95,12 +98,18 @@ export async function processNextSyncJob(database?:D1Database){
       db.prepare("UPDATE sync_jobs SET status=?,cursor=?,last_error=NULL,error=NULL,locked_until=NULL,next_run_at=?,finished_at=? WHERE id=? AND status='running' AND locked_until=?").bind(complete?"completed":"queued",page.nextPageToken||null,stamp,complete?stamp:null,job.id,leaseUntil),
       ...(complete?[db.prepare("UPDATE locations SET status='connected',last_synced_at=?,review_count=(SELECT COUNT(*) FROM reviews WHERE workspace_id=? AND location_id=?),rating=(SELECT AVG(rating) FROM reviews WHERE workspace_id=? AND location_id=?) WHERE id=? AND workspace_id=? AND EXISTS(SELECT 1 FROM google_connections WHERE workspace_id=? AND status='connected')").bind(stamp,job.workspace_id,job.location_id,job.workspace_id,job.location_id,job.location_id,job.workspace_id,job.workspace_id)]:[])
     ]);
+    const duration=Date.now()-syncStartedAt;
+    Sentry.metrics.distribution("sync.job.duration",duration,{unit:"millisecond"});
+    logInfo("google_sync_completed",{status:complete?"completed":"continuing",duration_ms:duration});
     return {processed:true,status:complete?"completed":"queued",jobId:job.id};
   }catch(error){
     const status=error instanceof GoogleHttpError?error.status:0,message=String(error).slice(0,500),stamp=Date.now();
     if(status===401||(status===400&&message.includes("invalid_grant"))){await db.batch([db.prepare("UPDATE google_connections SET status='revoked',last_error=?,updated_at=? WHERE id=? AND workspace_id=?").bind(message,stamp,job.connection_id,job.workspace_id),db.prepare("UPDATE locations SET status='revoked' WHERE id=? AND workspace_id=?").bind(job.location_id,job.workspace_id),db.prepare("UPDATE sync_jobs SET status='revoked',last_error=?,error=?,finished_at=?,locked_until=NULL WHERE id=? AND locked_until=?").bind(message,message,stamp,job.id,leaseUntil)]);return {processed:true,status:"revoked",jobId:job.id}}
     const retry=status===429||status>=500||status===0,attempts=job.attempts+1,terminal=!retry||attempts>=MAX_JOB_ATTEMPTS,next=stamp+retryDelay(attempts);
     await db.prepare("UPDATE sync_jobs SET status=?,attempts=?,last_error=?,error=?,next_run_at=?,finished_at=?,locked_until=NULL WHERE id=? AND status='running' AND locked_until=?").bind(terminal?"failed":"retry",attempts,message,message,next,terminal?stamp:null,job.id,leaseUntil).run();
+    Sentry.metrics.count("sync.job.error",1);
+    Sentry.metrics.distribution("sync.job.duration",Date.now()-syncStartedAt,{unit:"millisecond"});
+    logError("google_sync_error",{statusCode:status,attempts,terminal});
     return {processed:true,status:terminal?"failed":"retry",jobId:job.id};
   }
 }

@@ -1,22 +1,22 @@
 ## Summary
 
-Describe what changed and why.
+<!-- What changed and why? -->
 
-## Verification checklist
+## Accessibility (WCAG 2.2 AA)
 
-- [ ] Tests were added or updated where behavior changed, and the relevant test suite passes.
-- [ ] Database migrations were added, reviewed, and documented, or this change requires no migration.
-- [ ] User-facing and developer documentation was updated, or this change requires no documentation update.
-- [ ] Accessibility was checked for affected UI, including keyboard use, focus, labels, contrast, and screen-reader semantics.
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build` pass locally.
+- [ ] Complete the flow using only Tab, Shift+Tab, Enter, Space, and arrow keys where appropriate; verify logical focus order and no keyboard traps.
+- [ ] Verify every focused control has a clearly visible focus indicator and the skip link reaches the main content.
+- [ ] Check text contrast at 4.5:1 (3:1 for large text and non-text UI boundaries where applicable).
+- [ ] Check interactive targets are at least 24 × 24 CSS px or meet the spacing exception.
+- [ ] Confirm form controls have programmatic labels, errors/status updates are announced, and heading levels are in order.
+- [ ] Confirm animations respect `prefers-reduced-motion`.
+- [ ] Run Axe on the changed screens; resolve all serious and critical findings.
+- [ ] Manually verify the primary flow with NVDA or VoiceOver and record browser/OS and any limitation.
 
-## Deployment notes
+## Verification
 
-List migrations, new environment variables, rollout steps, or rollback considerations. Write “None” when not applicable.
+- [ ] `npm run lint`
+- [ ] `npm run typecheck`
+- [ ] `npm run test:e2e`
 
-## Review checklist
-
-- [ ] Tests cover the changed behavior and pass locally.
-- [ ] Database migrations are included and reversible, or are not required.
-- [ ] User/developer documentation is updated, or no update is required.
-- [ ] Accessibility was checked for affected user interfaces, including keyboard and screen-reader behavior.
+<!-- Attach Axe output or manual screen-reader notes for accessibility changes. -->

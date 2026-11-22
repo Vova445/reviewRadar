@@ -104,7 +104,7 @@ export default function Onboarding() {
   const done = statuses.filter((item) => ["completed", "failed", "revoked"].includes(item.status)).reduce((sum, item) => sum + item.count, 0);
   const percent = total ? Math.round(done / total * 100) : 0;
 
-  return <main className="onboarding">
+  return <main className="onboarding" id="main-content" tabIndex={-1}>
     <header><Link className="obLogo" href="/"><b>R</b>Review<span>Radar</span></Link><span>{t.eyebrow}</span><LanguageToggle/><a href="/dashboard">×</a></header>
     <nav className="obSteps" aria-label="Onboarding progress">{t.labels.map((label, index) => <div key={label} className={step === index + 1 ? "active" : (data?.state.completedSteps.includes(index + 1) ? "done" : "")}><b>{data?.state.completedSteps.includes(index + 1) ? "✓" : `0${index + 1}`}</b><span>{label}</span></div>)}</nav>
     <section className={`obCard ${step >= 3 ? "wide" : ""}`}>
@@ -125,7 +125,7 @@ export default function Onboarding() {
           <div className="obActions"><button className="obBack" onClick={() => { setStep(2); void saveStep(2, false); }}>{t.back}</button><button className="obPrimary" disabled={!selected.length || busy} onClick={selectLocations}>{busy ? t.loading : t.choose} →</button></div>
         </>}
       </> : <>
-        <div className="obProgress"><div className="radarPulse"><b>R</b><i/><em/></div><h2>{t.progress}</h2><div className="progressTrack"><i style={{ width: `${total ? percent : 5}%` }}/></div><strong>{total ? `${percent}%` : t.loading}</strong><div className="obSyncStats"><span>{data.sync.reviews} {t.reviews}</span>{statuses.map((status) => <span key={status.status}>{t.syncStatus[status.status] || status.status}: {status.count}</span>)}</div><p>{t.wait}</p></div>
+        <div className="obProgress"><div className="radarPulse" aria-hidden="true"><b>R</b><i/><em/></div><h2>{t.progress}</h2><div className="progressTrack" role="progressbar" aria-label={t.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={total ? percent : 0}><i style={{ width: `${total ? percent : 5}%` }}/></div><strong aria-live="polite">{total ? `${percent}%` : t.loading}</strong><div className="obSyncStats" aria-live="polite"><span>{data.sync.reviews} {t.reviews}</span>{statuses.map((status) => <span key={status.status}>{t.syncStatus[status.status] || status.status}: {status.count}</span>)}</div><p>{t.wait}</p></div>
         <a className="dashboardLink" href="/dashboard">{t.goDashboard} →</a>
       </>}
     </section>

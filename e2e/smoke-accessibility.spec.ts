@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 const baseURL = process.env.E2E_BASE_URL || "http://localhost:4000";
 
 async function expectAccessible(page: Page, checkpoint: string) {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   const serious = results.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical");
   expect(serious.map((violation) => `${violation.impact}: ${violation.id} — ${violation.help}: ${violation.nodes.map((node) => `${node.target.join(" ")} ${node.failureSummary ?? ""}`).join(" | ")}`), `${checkpoint} has serious or critical accessibility issues`).toEqual([]);
 }
@@ -46,6 +46,8 @@ test("register, login, mock Google, sync and open the dashboard", async ({ page 
     return route.fulfill({ json: { connected: true, locations: onboarding.locations } });
   });
 
+  await page.goto("/");
+  await expectAccessible(page, "landing page");
   await page.goto("/auth?mode=signup");
   await expect(page.getByRole("heading", { name: "Створити акаунт" })).toBeVisible();
   await expectAccessible(page, "sign-up page");
@@ -87,6 +89,20 @@ test("register, login, mock Google, sync and open the dashboard", async ({ page 
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole("heading", { name: new RegExp(name) })).toBeVisible();
   await expectAccessible(page, "dashboard after sync");
+  for (const [label, heading] of [
+    ["Відгуки", "Відгуки"],
+    ["Аналітика", "Аналітика"],
+    ["AI-інсайти", "Інсайти"],
+    ["Локації", "Локації"],
+    ["Інтеграції", "Інтеграції"],
+    ["Сповіщення", "Сповіщення"],
+    ["Звіти", "Звіти"],
+    ["Налаштування", "Налаштування"],
+  ]) {
+    await page.getByRole("button", { name: label }).click();
+    await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
+    await expectAccessible(page, `dashboard ${label} screen`);
+  }
 });
 
 test("shows an actionable error for an invalid OAuth state", async ({ page }) => {
@@ -104,4 +120,28 @@ test("shows an actionable error for an invalid OAuth state", async ({ page }) =>
   await expect(page).toHaveURL(/\/integrations\/google\/locations\?error=INVALID_OAUTH_STATE$/);
   await expect(page.getByText("Спроба підключення застаріла")).toBeVisible();
   await expectAccessible(page, "invalid OAuth state page");
+});
+
+test("keyboard skip link, focus indicator, reduced motion, and minimum control targets", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/auth");
+  await page.keyboard.press("Tab");
+  const skipLink = page.getByRole("link", { name: /Перейти до основного вмісту/ });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeInViewport();
+  await expect(skipLink).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+  await page.keyboard.press("Tab");
+  const focusedStyle = await page.evaluate(() => ({
+    outlineStyle: getComputedStyle(document.activeElement!).outlineStyle,
+    outlineWidth: getComputedStyle(document.activeElement!).outlineWidth,
+  }));
+  expect(focusedStyle).toEqual({ outlineStyle: "solid", outlineWidth: "3px" });
+  const smallTargets = await page.locator("button, input, select, textarea, summary, [role='button']").evaluateAll(elements =>
+    elements.filter(element => {
+      const bounds = element.getBoundingClientRect();
+      return bounds.width < 24 || bounds.height < 24;
+    }).map(element => `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ""}`),
+  );
+  expect(smallTargets, "interactive controls should meet the 24 by 24 CSS pixel target floor").toEqual([]);
+  await expectAccessible(page, "sign-in page with reduced motion enabled");
 });

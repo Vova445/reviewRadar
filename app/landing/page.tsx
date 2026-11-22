@@ -251,7 +251,8 @@ export default function LandingPage() {
   const en = language === "en";
   useLandingTranslation(en);
   return (
-    <main className="rrLanding" id="top">
+    <main className="rrLanding" id="main-content" tabIndex={-1}>
+      <span id="top" aria-hidden="true" />
       <LandingHeader />
 
       <section className="rrHero">

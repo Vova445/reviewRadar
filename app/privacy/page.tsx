@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="rrLanding" id="top" style={{ background: "#151713", color: "#f3f0e8", minHeight: "100vh" }}>
+    <main className="rrLanding" id="main-content" tabIndex={-1} style={{ background: "#151713", color: "#f3f0e8", minHeight: "100vh" }}>
       <LandingHeader />
 
       <section style={{ padding: "clamp(130px, 15vh, 180px) clamp(24px, 5vw, 84px) 80px", maxWidth: "1100px", margin: "0 auto" }}>

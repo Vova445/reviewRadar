@@ -50,7 +50,7 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open <http://localhost:4000>. The local development database is provided by the Cloudflare D1/Miniflare binding declared as `DB` in `.openai/hosting.json`.
+Open <http://localhost:4000>. The local development database is provided by the Cloudflare D1/Miniflare binding `DB` in `wrangler.jsonc`.
 
 For a basic launch and UI review, the copied placeholders may remain blank. Populate the Google and encryption variables only before testing Google connection/synchronization. Production must never use blank security values.
 
@@ -80,7 +80,8 @@ Never commit `.env.local`, production secrets, OAuth tokens, or key material. `.
 | `OAUTH_TOKEN_ENCRYPTION_KEY_ID` | Google integration | Active key ID. Stored beside each encrypted refresh/access token. |
 | `OAUTH_TOKEN_ENCRYPTION_KEY` | Legacy fallback | Single-key compatibility only; use the keyring variable for rotation. |
 | `OAUTH_TOKEN_ROTATION_SECRET` | Key rotation | Bearer secret for the protected, paginated token-rotation endpoint and CLI script. |
-| `GOOGLE_PUBSUB_VERIFICATION_TOKEN` | Notifications | Verification value for the current Google notification endpoint. |
+| `GOOGLE_PUBSUB_AUDIENCE` | Notifications | Exact HTTPS push endpoint configured as the Pub/Sub OIDC audience. |
+| `GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL` | Notifications | User-managed Google service account whose signed OIDC token Pub/Sub uses. |
 | `GOOGLE_SYNC_SECRET` | Scheduled/manual sync | Bearer secret for `/v1/jobs/google/sync`. |
 
 ### Optional or future modules
@@ -113,6 +114,8 @@ Set `GOOGLE_REDIRECT_URI` to the matching value in each environment.
 | `npm run dev` | Start the local Worker-compatible server on port 4000. |
 | `npm run dev:win` | Windows fallback that validates/selects Node and clears the Vite cache. |
 | `npm run build` | Create a production build. |
+| `npm run db:migrations:dry-run` | Rehearse all D1 migrations against an isolated local database. |
+| `npm run deploy:dry-run` | Build the Worker upload without publishing it. |
 | `npm run start` | Start the built application. |
 | `npm run lint` | Run ESLint and fail on errors or warnings. |
 | `npm run typecheck` | Run strict TypeScript checking without emitting files. |
@@ -140,7 +143,7 @@ Pull the latest `package.json` and `package-lock.json`, which declare the Window
 
 ### `D1 binding DB is not configured`
 
-Start the project through `npm run dev`, not by invoking the framework entry file directly. Confirm `.openai/hosting.json` contains `"d1": "DB"`.
+Start the project through `npm run dev`, not by invoking the framework entry file directly. Confirm `wrangler.jsonc` contains the `DB` D1 binding.
 
 ### Google returns `redirect_uri_mismatch`
 
@@ -157,6 +160,19 @@ Set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` to enable queued review class
 ### Port 4000 is already in use
 
 Stop the previous ReviewRadar development process and rerun `npm run dev`. Changing the port also requires changing the registered Google callback.
+
+## Staging and production releases
+
+`wrangler.jsonc` defines separate `dev`, `staging`, and `production` Worker/D1/Queue names. Real Cloudflare database IDs, URLs, and secrets are supplied through GitHub Actions environments; placeholder IDs and `.invalid` hostnames are deliberately rejected by the deployment preparation script. Create separate D1 databases and configure these GitHub environment values and secrets for both `staging` and `production`:
+
+- Variables: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_D1_DATABASE_ID`, `APP_BASE_URL`, `GOOGLE_REDIRECT_URI`, `EMAIL_FROM`, `OAUTH_TOKEN_ENCRYPTION_KEY_ID` (and optional `NEXT_PUBLIC_SENTRY_DSN`).
+- Secrets: `CLOUDFLARE_API_TOKEN`, `AUTH_PASSWORD_PEPPER`, `RESEND_API_KEY`, `OAUTH_TOKEN_ENCRYPTION_KEYS`, `OAUTH_TOKEN_ROTATION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_SYNC_SECRET`; optionally `OAUTH_TOKEN_ENCRYPTION_KEY`, `OPENAI_API_KEY`, and `SENTRY_DSN`.
+- GitHub environment variables: `GOOGLE_PUBSUB_AUDIENCE` (exact deployed push URL) and `GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL` (OIDC token identity), alongside the OAuth redirect and encryption key ID.
+- Backup workflow variables: `CLOUDFLARE_ACCOUNT_ID`, `R2_BACKUP_BUCKET`; secrets: `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`. The monthly restore drill also needs D1 create/delete permissions on its Cloudflare API token. See [D1 backup and restore runbook](docs/d1-backups.md).
+
+Grant the API token only the Workers deploy and D1 migration permissions needed for these databases. Configure the GitHub `production` environment with required reviewers; the production job waits for that approval after the staging migration, deployment, and smoke checks succeed. The workflow reviews pending migrations, applies them to staging, deploys the commit SHA as an immutable Worker version, then proceeds to the protected production environment. A failed production migration prevents that release's Worker deployment. `db/rollbacks/README.md` documents migration recovery plans; [the release incident runbook](docs/runbook-release.md) covers Worker rollback and D1 recovery.
+
+The repository does not contain live Cloudflare IDs or GitHub environment secrets, so remote migrations/deploys become active only after those external environment settings are provisioned.
 
 ## Architecture and project status
 

@@ -1,10 +1,12 @@
 export const schemaStatements = [
-  `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT, created_at INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, name TEXT, created_at INTEGER NOT NULL, email_verified_at INTEGER)`,
   `CREATE TABLE IF NOT EXISTS password_credentials (user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, iterations INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, token_hash TEXT NOT NULL UNIQUE, expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL, last_seen_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_tokens (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, token_hash TEXT NOT NULL UNIQUE, purpose TEXT NOT NULL CHECK(purpose IN ('verify_email','password_reset','change_email')), target_email TEXT, expires_at INTEGER NOT NULL, used_at INTEGER, created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS email_send_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, window_start INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, window_start INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS account_deletion_jobs (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, workspace_id TEXT, status TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, next_run_at INTEGER NOT NULL DEFAULT 0, last_error TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS idx_account_deletion_jobs_status_run ON account_deletion_jobs(status,next_run_at,created_at)`,
   `CREATE TABLE IF NOT EXISTS workspaces (id TEXT PRIMARY KEY, name TEXT NOT NULL, owner_user_id TEXT NOT NULL REFERENCES users(id), created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS workspace_members (workspace_id TEXT NOT NULL REFERENCES workspaces(id), user_id TEXT NOT NULL REFERENCES users(id), role TEXT NOT NULL DEFAULT 'OWNER', PRIMARY KEY (workspace_id, user_id))`,
   `UPDATE workspace_members SET role = UPPER(role) WHERE role != UPPER(role)`,
@@ -39,8 +41,12 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS idx_reviews_location_created_at ON reviews(location_id, review_created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_analysis_jobs_status_created ON analysis_jobs(status, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_reviews_workspace_created_at ON reviews(workspace_id, review_created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_reviews_workspace_created_id ON reviews(workspace_id, review_created_at DESC, id DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_reviews_workspace_rating_created_id ON reviews(workspace_id, rating, review_created_at DESC, id DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_review_analyses_sentiment_review ON review_analyses(sentiment, review_id)`,
   `CREATE INDEX IF NOT EXISTS idx_review_source_content_purge_after ON review_source_content(purge_after)`,
   `CREATE INDEX IF NOT EXISTS idx_review_topics_topic_id ON review_topics(topic_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_review_topics_topic_review ON review_topics(topic_id, review_id)`,
   `CREATE INDEX IF NOT EXISTS idx_insight_clusters_workspace_period ON insight_clusters(workspace_id, period_end DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_reply_drafts_review_id ON reply_drafts(review_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_alert_rules_workspace_enabled ON alert_rules(workspace_id, enabled)`,
@@ -52,6 +58,10 @@ export const schemaStatements = [
 
 export const schemaMigrations = [
   { table: "users", column: "email_verified_at", statement: "ALTER TABLE users ADD COLUMN email_verified_at INTEGER" },
+  { table: "google_notification_events", column: "status", statement: "ALTER TABLE google_notification_events ADD COLUMN status TEXT NOT NULL DEFAULT 'received'" },
+  { table: "google_notification_events", column: "locked_until", statement: "ALTER TABLE google_notification_events ADD COLUMN locked_until INTEGER" },
+  { table: "google_notification_events", column: "attempts", statement: "ALTER TABLE google_notification_events ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0" },
+  { table: "google_notification_events", column: "completed_at", statement: "ALTER TABLE google_notification_events ADD COLUMN completed_at INTEGER" },
   {
     table: "locations",
     column: "created_at",

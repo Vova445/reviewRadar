@@ -1,5 +1,8 @@
+import * as Sentry from "@sentry/cloudflare";
+import { currentRequestId } from "./request-context";
+
 export type AuditEventType = "login" | "logout" | "connect" | "disconnect" | "delete" | "role_change";
-const sensitiveKey = /(?:token|password|passphrase|email|comment|^review$|reviewtext|reviewbody|requestbody|body|content|cookie|authorization|secret|(?:oauth|auth|callback)?code)/i;
+const sensitiveKey = /(?:token|password|passphrase|email|comment|^review$|reviewtext|reviewbody|requestbody|body|content|cookie|authorization|secret|(?:oauth|auth|callback)?code|user.?id|workspace.?id|location.?id|job.?id)/i;
 const emailPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const bearerPattern = /\bBearer\s+[A-Z0-9._~+/=-]+/gi;
 const oauthTokenPattern = /\b(?:ya29\.[A-Z0-9._~-]+|1\/\/0[A-Z0-9._~-]+)\b/gi;
@@ -20,7 +23,7 @@ export function redactLogValue(value: unknown, key = ""): unknown {
 }
 
 export function serializeLog(event: string, details: Record<string, unknown> = {}) {
-  return JSON.stringify(redactLogValue({ event, ...details }));
+  return JSON.stringify(redactLogValue({ event, ...details, request_id: currentRequestId() }));
 }
 
 export function logInfo(event: string, details: Record<string, unknown> = {}) {
@@ -29,6 +32,10 @@ export function logInfo(event: string, details: Record<string, unknown> = {}) {
 
 export function logError(event: string, details: Record<string, unknown> = {}) {
   console.error(serializeLog(event, details));
+  Sentry.withScope((scope) => {
+    scope.setTag("request_id", currentRequestId());
+    Sentry.captureException(new Error(event));
+  });
 }
 
 const allowedMetaKeys = new Set(["provider", "resource", "count", "reason", "outcome", "from", "to", "reconnected"]);

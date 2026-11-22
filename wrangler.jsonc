@@ -1,0 +1,192 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "reviewradar-dev",
+  "main": "worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "APP_BASE_URL": "http://localhost:4000",
+    "GOOGLE_REDIRECT_URI": "http://localhost:4000/v1/integrations/google/callback",
+    "EMAIL_FROM": "ReviewRadar <noreply@example.com>",
+    "OPENAI_MODEL": "gpt-4o-mini",
+    "SENTRY_ENVIRONMENT": "development"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "reviewradar-dev",
+      "database_id": "00000000-0000-4000-8000-000000000000",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "ANALYSIS_QUEUE",
+        "queue": "review-analysis-dev"
+      },
+      {
+        "binding": "GOOGLE_SYNC_QUEUE",
+        "queue": "google-push-dev"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "review-analysis-dev",
+        "max_retries": 4,
+        "dead_letter_queue": "review-analysis-dlq-dev",
+        "max_batch_size": 1
+      },
+      {
+        "queue": "google-push-dev",
+        "max_retries": 4,
+        "dead_letter_queue": "google-push-dlq-dev",
+        "max_batch_size": 10
+      },
+      {
+        "queue": "google-push-dlq-dev",
+        "max_batch_size": 10
+      }
+    ]
+  },
+  "triggers": {
+    "crons": [
+      "*/5 * * * *",
+      "0 3 * * *"
+    ]
+  },
+  "env": {
+    "staging": {
+      "name": "reviewradar-staging",
+      "main": "worker.ts",
+      "compatibility_date": "2026-05-15",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "workers_dev": true,
+      "observability": {
+        "enabled": true
+      },
+      "vars": {
+        "APP_BASE_URL": "https://reviewradar-staging.invalid",
+        "GOOGLE_REDIRECT_URI": "https://reviewradar-staging.invalid/v1/integrations/google/callback",
+        "EMAIL_FROM": "ReviewRadar <noreply@example.com>",
+        "OPENAI_MODEL": "gpt-4o-mini",
+        "SENTRY_ENVIRONMENT": "staging"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "reviewradar-staging",
+          "database_id": "00000000-0000-4000-8000-000000000001",
+          "migrations_dir": "db/migrations"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "ANALYSIS_QUEUE",
+            "queue": "review-analysis-staging"
+          },
+          {
+            "binding": "GOOGLE_SYNC_QUEUE",
+            "queue": "google-push-staging"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "review-analysis-staging",
+            "max_retries": 4,
+            "dead_letter_queue": "review-analysis-dlq-staging",
+            "max_batch_size": 1
+          },
+          {
+            "queue": "google-push-staging",
+            "max_retries": 4,
+            "dead_letter_queue": "google-push-dlq-staging",
+            "max_batch_size": 10
+          },
+          {
+            "queue": "google-push-dlq-staging",
+            "max_batch_size": 10
+          }
+        ]
+      },
+      "triggers": {
+        "crons": [
+          "*/5 * * * *",
+          "0 3 * * *"
+        ]
+      }
+    },
+    "production": {
+      "name": "reviewradar-production",
+      "main": "worker.ts",
+      "compatibility_date": "2026-05-15",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "workers_dev": true,
+      "observability": {
+        "enabled": true
+      },
+      "vars": {
+        "APP_BASE_URL": "https://reviewradar-production.invalid",
+        "GOOGLE_REDIRECT_URI": "https://reviewradar-production.invalid/v1/integrations/google/callback",
+        "EMAIL_FROM": "ReviewRadar <noreply@example.com>",
+        "OPENAI_MODEL": "gpt-4o-mini",
+        "SENTRY_ENVIRONMENT": "production"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "reviewradar-production",
+          "database_id": "00000000-0000-4000-8000-000000000002",
+          "migrations_dir": "db/migrations"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "ANALYSIS_QUEUE",
+            "queue": "review-analysis-production"
+          },
+          {
+            "binding": "GOOGLE_SYNC_QUEUE",
+            "queue": "google-push-production"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "review-analysis-production",
+            "max_retries": 4,
+            "dead_letter_queue": "review-analysis-dlq-production",
+            "max_batch_size": 1
+          },
+          {
+            "queue": "google-push-production",
+            "max_retries": 4,
+            "dead_letter_queue": "google-push-dlq-production",
+            "max_batch_size": 10
+          },
+          {
+            "queue": "google-push-dlq-production",
+            "max_batch_size": 10
+          }
+        ]
+      },
+      "triggers": {
+        "crons": [
+          "*/5 * * * *",
+          "0 3 * * *"
+        ]
+      }
+    }
+  }
+}

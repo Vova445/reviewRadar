@@ -21,6 +21,7 @@ export function readyDatabase() {
         await db.prepare(migration.statement).run();
       }
     }
+    await db.prepare("CREATE INDEX IF NOT EXISTS idx_google_notification_status_lease ON google_notification_events(status,locked_until)").run();
     await db.prepare("UPDATE google_connections SET encrypted_refresh_token_key_id=substr(substr(encrypted_refresh_token,4),1,instr(substr(encrypted_refresh_token,4),'.')-1) WHERE encrypted_refresh_token_key_id IS NULL AND encrypted_refresh_token LIKE 'v1.%'").run();
     await db.prepare("UPDATE google_connections SET encrypted_access_token_key_id=substr(substr(encrypted_access_token,4),1,instr(substr(encrypted_access_token,4),'.')-1) WHERE encrypted_access_token_key_id IS NULL AND encrypted_access_token LIKE 'v1.%'").run();
     await db.prepare("UPDATE reviews SET retention_until=created_at+2592000000 WHERE retention_until=0").run();

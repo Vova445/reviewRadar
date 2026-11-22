@@ -1,1 +1,32 @@
-import { NextResponse } from "next/server";import { readyDatabase } from "../../../../../server/d1";import { syncAll } from "../../../../../server/google-business";export async function POST(r:Request){const expected=process.env.GOOGLE_PUBSUB_VERIFICATION_TOKEN?.trim(),given=new URL(r.url).searchParams.get("token");if(!expected||given!==expected)return NextResponse.json({error:"unauthorized"},{status:401});const body=await r.json().catch(()=>null) as {message?:{messageId?:string;data?:string}}|null,id=body?.message?.messageId;if(!id)return NextResponse.json({error:"invalid_pubsub_message"},{status:400});const db=await readyDatabase(),reserved=await db.prepare("INSERT OR IGNORE INTO google_notification_events(event_id,received_at) VALUES(?,?)").bind(id,Date.now()).run();if(!reserved.meta.changes)return NextResponse.json({ok:true,duplicate:true});await syncAll();return NextResponse.json({ok:true})}
+import { env } from "cloudflare:workers";
+import { NextResponse } from "next/server";
+import { readyDatabase } from "../../../../../server/d1";
+import { receiveGooglePubSubPush, type GooglePushQueueMessage } from "../../../../../server/google-pubsub";
+
+type PushEnv = Cloudflare.Env & {
+  GOOGLE_SYNC_QUEUE?: Queue<GooglePushQueueMessage>;
+  GOOGLE_PUBSUB_AUDIENCE?: string;
+  GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL?: string;
+};
+
+export async function POST(request: Request) {
+  const bindings = env as PushEnv;
+  const audience = bindings.GOOGLE_PUBSUB_AUDIENCE?.trim();
+  const serviceAccountEmail = bindings.GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL?.trim();
+  const queue = bindings.GOOGLE_SYNC_QUEUE;
+  if (!audience || !serviceAccountEmail || !queue) {
+    return NextResponse.json({ error: "push_not_configured" }, { status: 503 });
+  }
+
+  const rawBody = await request.text().catch(() => "");
+  const result = await receiveGooglePubSubPush({
+    authorization: request.headers.get("authorization"),
+    rawBody,
+    audience,
+    serviceAccountEmail,
+    database: await readyDatabase(),
+    queue,
+  });
+  if (result.status === 204) return new Response(null, { status: 204 });
+  return NextResponse.json(result.body, { status: result.status });
+}

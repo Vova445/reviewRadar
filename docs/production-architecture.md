@@ -14,7 +14,7 @@ flowchart LR
 
 The browser never calls D1, the AI provider, or Google Business Profile directly. Worker route handlers authenticate the user, resolve workspace membership, validate input, execute D1 operations, and call external HTTPS APIs. Provider credentials and encryption keys remain server-side.
 
-The `DB` binding in `.openai/hosting.json`, `db/schema.ts`, and D1 migration files are the authoritative beta persistence path.
+The `DB` binding in `wrangler.jsonc`, `db/schema.ts`, and D1 migration files are the authoritative beta persistence path. The Wrangler file defines isolated dev, staging, and production bindings; live account/database IDs are injected by the deployment workflow.
 
 ## Request and background-work ownership
 

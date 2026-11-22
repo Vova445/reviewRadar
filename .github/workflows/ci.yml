@@ -57,6 +57,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Rehearse D1 migrations against isolated local D1
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          WRANGLER_WRITE_LOGS: 'false'
+          WRANGLER_LOG_PATH: .wrangler/logs
+          MINIFLARE_REGISTRY_PATH: .wrangler/registry
+        run: npm run db:migrations:dry-run
+
+      - name: Dry-run immutable Worker upload
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run deploy:dry-run
+
       - name: Smoke and accessibility tests on production preview
         run: npm run test:e2e
 
@@ -68,3 +80,113 @@ jobs:
           path: test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+  deploy-staging:
+    name: Migrate and deploy staging
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+      GOOGLE_REDIRECT_URI: ${{ vars.GOOGLE_REDIRECT_URI }}
+      EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+      AUTH_PASSWORD_PEPPER: ${{ secrets.AUTH_PASSWORD_PEPPER }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      OAUTH_TOKEN_ENCRYPTION_KEY_ID: ${{ vars.OAUTH_TOKEN_ENCRYPTION_KEY_ID }}
+      OAUTH_TOKEN_ENCRYPTION_KEYS: ${{ secrets.OAUTH_TOKEN_ENCRYPTION_KEYS }}
+      OAUTH_TOKEN_ROTATION_SECRET: ${{ secrets.OAUTH_TOKEN_ROTATION_SECRET }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_PUBSUB_AUDIENCE: ${{ vars.GOOGLE_PUBSUB_AUDIENCE }}
+      GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL: ${{ vars.GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_SYNC_SECRET: ${{ secrets.GOOGLE_SYNC_SECRET }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - name: Checkout verified commit
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Prepare isolated staging config and secrets
+        run: node scripts/prepare-cloudflare-deployment.mjs staging
+      - name: Review pending staging migrations
+        run: npx wrangler d1 migrations list DB --config .wrangler/wrangler-staging.json --remote
+      - name: Apply staging D1 migrations
+        run: npx wrangler d1 migrations apply DB --config .wrangler/wrangler-staging.json --remote
+      - name: Build staging Worker
+        env:
+          CLOUDFLARE_WRANGLER_CONFIG: .wrangler/wrangler-staging.json
+        run: npm run build
+      - name: Deploy tagged staging version
+        run: npx wrangler deploy --config dist/server/wrangler.json --tag "${GITHUB_SHA}" --message "reviewradar staging ${GITHUB_SHA}" --secrets-file .wrangler/secrets-staging.json
+      - name: Smoke-check staging liveness and readiness
+        run: |
+          curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 5 "${APP_BASE_URL}/healthz"
+          curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 5 "${APP_BASE_URL}/readyz"
+
+  deploy-production:
+    name: Migrate and deploy production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+      GOOGLE_REDIRECT_URI: ${{ vars.GOOGLE_REDIRECT_URI }}
+      EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+      AUTH_PASSWORD_PEPPER: ${{ secrets.AUTH_PASSWORD_PEPPER }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      OAUTH_TOKEN_ENCRYPTION_KEY_ID: ${{ vars.OAUTH_TOKEN_ENCRYPTION_KEY_ID }}
+      OAUTH_TOKEN_ENCRYPTION_KEYS: ${{ secrets.OAUTH_TOKEN_ENCRYPTION_KEYS }}
+      OAUTH_TOKEN_ROTATION_SECRET: ${{ secrets.OAUTH_TOKEN_ROTATION_SECRET }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_PUBSUB_AUDIENCE: ${{ vars.GOOGLE_PUBSUB_AUDIENCE }}
+      GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL: ${{ vars.GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_SYNC_SECRET: ${{ secrets.GOOGLE_SYNC_SECRET }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - name: Checkout verified commit
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Prepare isolated production config and secrets
+        run: node scripts/prepare-cloudflare-deployment.mjs production
+      - name: Review pending production migrations
+        run: npx wrangler d1 migrations list DB --config .wrangler/wrangler-production.json --remote
+      - name: Apply production D1 migrations
+        run: npx wrangler d1 migrations apply DB --config .wrangler/wrangler-production.json --remote
+      - name: Build production Worker
+        env:
+          CLOUDFLARE_WRANGLER_CONFIG: .wrangler/wrangler-production.json
+        run: npm run build
+      - name: Deploy tagged production version
+        run: npx wrangler deploy --config dist/server/wrangler.json --tag "${GITHUB_SHA}" --message "reviewradar production ${GITHUB_SHA}" --secrets-file .wrangler/secrets-production.json
+      - name: Smoke-check production liveness and readiness
+        run: |
+          curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 5 "${APP_BASE_URL}/healthz"
+          curl --fail --silent --show-error --retry 12 --retry-connrefused --retry-delay 5 "${APP_BASE_URL}/readyz"
